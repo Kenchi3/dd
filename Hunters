@@ -7,17 +7,6 @@ local LocalPlayer = Players.LocalPlayer
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
--- Global control variables
-_G.AutoDungeonEnabled = true -- ใช้สำหรับเปิด/ปิดการทำงานของสคริปต์
-_G.Dungeon = "DoubleDungeonD" -- ชื่อดันเจี้ยนที่ต้องการเลือก
-_G.DungeonDifficulty = "Nightmare" -- ความยากที่ต้องการเลือก
-_G.WaitTimes = {
-    LobbyCreation = 2,
-    DifficultySelection = 2,
-    LobbyStart = 5,
-    DungeonStart = 10,
-    ReturnToLobby = 5
-}
 _G.InDungeon = false -- ใช้เก็บสถานะว่าผู้เล่นอยู่ในดันเจี้ยนหรือไม่
 
 -- Function to wait for a specific time
