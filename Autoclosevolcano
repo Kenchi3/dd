@@ -1,6 +1,3 @@
--- ตัวแปร _G สำหรับเปิด/ปิดการทำงาน
-_G.CloseVolcano = false
-
 -- ฟังก์ชันสำหรับค้นหา instance ที่อยู่ใน nil
 function getNil(name, class)
     for _, v in next, getnilinstances() do
