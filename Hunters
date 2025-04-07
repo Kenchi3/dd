@@ -142,6 +142,9 @@ while _G.AutoDungeonEnabled do
     end
 end
 
+repeat
+	task.wait()
+until game:IsLoaded()
 
 --—————— Services
 local TweenService = game:GetService("TweenService")
@@ -218,13 +221,13 @@ do
 
 
 
-	local Toggle = Tabs.Main:AddToggle("MyToggle", {Title = "Toggle", Default = true })
+	local Toggle = Tabs.Main:AddToggle("MyToggle", {Title = "Toggle", Default = false })
 
 	Toggle:OnChanged(function()
 		test1 = Options.MyToggle.Value
 	end)
 
-	Options.MyToggle:SetValue(false)
+	Options.MyToggle:SetValue(true)
 
 
 
