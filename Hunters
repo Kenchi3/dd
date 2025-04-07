@@ -1,4 +1,4 @@
-wait(7)
+wait(5)
 -- Auto Dungeon Script
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
