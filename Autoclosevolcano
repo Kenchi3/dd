@@ -1,0 +1,91 @@
+-- ตัวแปร _G สำหรับเปิด/ปิดการทำงาน
+_G.CloseVolcano = false
+
+-- ฟังก์ชันสำหรับค้นหา instance ที่อยู่ใน nil
+function getNil(name, class)
+    for _, v in next, getnilinstances() do
+        if v.ClassName == class and v.Name == name then
+            return v
+        end
+    end
+end
+
+-- ฟังก์ชันสำหรับตรวจสอบและปิด Volcano
+function autoCloseVolcano()
+    -- ค้นหา Volcanoes ตาม path ที่ระบุ
+    local volcanoes = game:GetService("Workspace"):WaitForChild("Map"):WaitForChild("Volcanoes")
+    local foundVolcano = false -- ตัวแปรสำหรับตรวจสอบว่าพบ Volcano หรือไม่
+
+    -- วนลูปผ่าน Volcanoes ทั้งหมด
+    for _, volcano in ipairs(volcanoes:GetChildren()) do
+        if volcano and volcano:IsA("Model") then
+            print("พบ Volcano! กำลังปิด...")
+            local args = {
+                [1] = volcano
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("VolcanoRemote"):FireServer(unpack(args))
+            print("ปิด Volcano สำเร็จ!")
+            foundVolcano = true
+        end
+    end
+
+    -- หากไม่มี Volcano ใด ๆ
+    if not foundVolcano then
+        print("ไม่มี Volcano ในตำแหน่งที่ระบุ")
+    end
+end
+
+-- สร้าง UI
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- ตั้งค่าปุ่ม ToggleButton
+ToggleButton.Parent = ScreenGui
+ToggleButton.Size = UDim2.new(0, 150, 0, 30) -- ขนาดเล็กลง
+ToggleButton.Position = UDim2.new(0, 10, 0, 10) -- มุมซ้ายบน
+ToggleButton.Text = "Toggle Auto Close"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.SourceSans
+ToggleButton.TextSize = 14
+
+-- ตั้งค่า StatusLabel
+StatusLabel.Parent = ScreenGui
+StatusLabel.Size = UDim2.new(0, 150, 0, 20) -- ขนาดเล็กลง
+StatusLabel.Position = UDim2.new(0, 10, 0, 45) -- ใต้ปุ่ม Toggle
+StatusLabel.Text = "Status: Inactive"
+StatusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.TextSize = 14
+
+-- อัปเดตสถานะ UI ให้ตรงกับ _G.CloseVolcano ตอนเริ่มต้น
+local function updateUI()
+    if _G.CloseVolcano then
+        StatusLabel.Text = "Status: Active"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        StatusLabel.Text = "Status: Inactive"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end
+updateUI() -- เรียกใช้ฟังก์ชันนี้ทันทีหลังจากสร้าง UI
+
+-- ฟังก์ชันสำหรับเปิด/ปิดการทำงาน
+ToggleButton.MouseButton1Click:Connect(function()
+    _G.CloseVolcano = not _G.CloseVolcano
+    updateUI() -- อัปเดต UI เมื่อมีการเปลี่ยนสถานะ
+end)
+
+-- ลูปสำหรับตรวจสอบ Volcano
+spawn(function()
+    while true do
+        if _G.CloseVolcano then
+            autoCloseVolcano()
+        end
+        wait(2) -- รอ 2 วินาทีก่อนตรวจสอบอีกครั้ง
+    end
+end)
