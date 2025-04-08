@@ -13,22 +13,20 @@ local defaultConfig = {
     farmHeight = 8
 }
 
--- Get config file name based on player's account
 function ConfigSystem:GetConfigFileName()
     local player = Players.LocalPlayer
-    return string.format("%s-config.json", player.Name)
+    return string.format("%s-config.json", player.UserId) -- ใช้ UserId แทน Name เพื่อความเสถียร
 end
 
--- Save configuration
 function ConfigSystem:SaveConfig()
     local config = {
-        selectedDungeon = selectedDungeon,
-        selectedDifficulty = selectedDifficulty,
-        autoJoinDungeon = autoJoinDungeon,
-        autoFarm = autoFarming,
-        autoStartDungeon = AutoStart,
-        autoLeaveDungeon = DungeonEnded,
-        farmHeight = Height
+        selectedDungeon = _G.selectedDungeon or defaultConfig.selectedDungeon,
+        selectedDifficulty = _G.selectedDifficulty or defaultConfig.selectedDifficulty,
+        autoJoinDungeon = _G.autoJoinDungeon or defaultConfig.autoJoinDungeon,
+        autoFarm = _G.autoFarming or defaultConfig.autoFarm,
+        autoStartDungeon = _G.AutoStart or defaultConfig.autoStartDungeon,
+        autoLeaveDungeon = _G.DungeonEnded or defaultConfig.autoLeaveDungeon,
+        farmHeight = _G.Height or defaultConfig.farmHeight
     }
     
     local success, err = pcall(function()
@@ -43,7 +41,6 @@ function ConfigSystem:SaveConfig()
     end
 end
 
--- Load configuration
 function ConfigSystem:LoadConfig()
     local fileName = self:GetConfigFileName()
     
@@ -54,6 +51,15 @@ function ConfigSystem:LoadConfig()
         end)
         
         if success then
+            -- Set global variables
+            _G.selectedDungeon = result.selectedDungeon
+            _G.selectedDifficulty = result.selectedDifficulty
+            _G.autoJoinDungeon = result.autoJoinDungeon
+            _G.autoFarming = result.autoFarm
+            _G.AutoStart = result.autoStartDungeon
+            _G.DungeonEnded = result.autoLeaveDungeon
+            _G.Height = result.farmHeight
+            
             return result
         else
             warn("Failed to load configuration:", result)
