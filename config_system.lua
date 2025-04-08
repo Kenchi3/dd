@@ -13,6 +13,9 @@ local defaultConfig = {
     farmHeight = 8
 }
 
+-- Keep track of initial load
+local isFirstLoad = true
+
 function ConfigSystem:GetConfigFileName()
     local player = Players.LocalPlayer
     return string.format("%s-config.json", player.UserId)
@@ -24,25 +27,29 @@ function ConfigSystem:LoadConfig()
     if isfile(fileName) then
         local success, result = pcall(function()
             local json = readfile(fileName)
-            return HttpService:JSONDecode(json)
+            local data = HttpService:JSONDecode(json)
+            print("[Config] Loaded existing configuration")
+            isFirstLoad = false
+            return data
         end)
         
         if success then
-            print("Successfully loaded saved configuration")
             return result
         else
-            warn("Failed to load configuration:", result)
+            warn("[Config] Failed to load configuration:", result)
             return defaultConfig
         end
     else
-        print("No config file found, using default settings")
+        print("[Config] No config file found, using default settings")
         return defaultConfig
     end
 end
 
 function ConfigSystem:SaveConfig()
-    if not self.lastSavedConfig then
-        self.lastSavedConfig = {}
+    -- Skip saving on first load
+    if isFirstLoad then
+        isFirstLoad = false
+        return
     end
 
     local currentConfig = {
@@ -55,26 +62,14 @@ function ConfigSystem:SaveConfig()
         farmHeight = _G.Height
     }
 
-    -- Compare with last saved config
-    local hasChanges = false
-    for key, value in pairs(currentConfig) do
-        if self.lastSavedConfig[key] ~= value then
-            hasChanges = true
-            break
-        end
-    end
-
-    if hasChanges then
-        local success, err = pcall(function()
-            local json = HttpService:JSONEncode(currentConfig)
-            writefile(self:GetConfigFileName(), json)
-            self.lastSavedConfig = table.clone(currentConfig)
-            print("Configuration saved - values changed")
-        end)
-        
-        if not success then
-            warn("Failed to save configuration:", err)
-        end
+    local success, err = pcall(function()
+        local json = HttpService:JSONEncode(currentConfig)
+        writefile(self:GetConfigFileName(), json)
+        print("[Config] Configuration saved successfully")
+    end)
+    
+    if not success then
+        warn("[Config] Failed to save configuration:", err)
     end
 end
 
