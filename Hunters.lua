@@ -1,3 +1,6 @@
+repeat
+	task.wait()
+until game:IsLoaded()
 wait(5)
 -- Auto Dungeon Script
 
