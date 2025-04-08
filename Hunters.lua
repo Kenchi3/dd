@@ -113,7 +113,7 @@ while _G.AutoDungeonEnabled do
         -- Step 4: Start Dungeon
         Remotes:WaitForChild("DungeonStart"):FireServer()
         print("Dungeon started.")
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Kenchi3/dd/refs/heads/main/BentenHub%20hunter"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Kenchi3/dd/refs/heads/main/BentenHubhunter.lua"))()
         waitFor(_G.WaitTimes.DungeonStart)
 
         -- Step 5: Wait for DungeonEnded Event
