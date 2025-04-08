@@ -86,7 +86,7 @@ do
 	local Slider = Tabs.Main:AddSlider("Slider", {
 		Title = "Slider",
 		Description = "This is a slider",
-		Default = 8,
+		Default = 10,
 		Min = 0,
 		Max = 20,
 		Rounding = 1,
