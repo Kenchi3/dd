@@ -2,8 +2,8 @@ local ConfigSystem = {}
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
--- Default config
-local defaultConfig = {
+-- Default settings
+ConfigSystem.defaults = {
     selectedDungeon = "GoblinCave",
     selectedDifficulty = "Normal",
     autoJoinDungeon = false,
@@ -13,35 +13,32 @@ local defaultConfig = {
     farmHeight = 8
 }
 
--- Config state
-local configLoaded = false
-local currentConfig = {}
+-- Get config file path
+function ConfigSystem:GetConfigPath()
+    return string.format("%s_settings.json", Players.LocalPlayer.UserId)
+end
 
-function ConfigSystem:Init()
-    local filename = Players.LocalPlayer.UserId .. "_config.json"
+-- Load saved config
+function ConfigSystem:Load()
+    local path = self:GetConfigPath()
     
-    if isfile(filename) then
-        local success, data = pcall(function()
-            return HttpService:JSONDecode(readfile(filename))
+    if isfile(path) then
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(readfile(path))
         end)
         
         if success then
-            currentConfig = data
-            configLoaded = true
-            warn("[CONFIG] Loaded from:", filename)
-            return data
+            warn("[CONFIG] Loaded settings from", path)
+            return result
         end
     end
     
-    currentConfig = defaultConfig
-    configLoaded = true
     warn("[CONFIG] Using default settings")
-    return defaultConfig
+    return self.defaults
 end
 
+-- Save current config
 function ConfigSystem:Save()
-    if not configLoaded then return end
-    
     local data = {
         selectedDungeon = _G.selectedDungeon,
         selectedDifficulty = _G.selectedDifficulty,
@@ -52,15 +49,14 @@ function ConfigSystem:Save()
         farmHeight = _G.Height
     }
     
-    local filename = Players.LocalPlayer.UserId .. "_config.json"
-    
-    local success = pcall(function()
-        writefile(filename, HttpService:JSONEncode(data))
-        warn("[CONFIG] Saved to:", filename)
+    local success, err = pcall(function()
+        writefile(self:GetConfigPath(), HttpService:JSONEncode(data))
     end)
     
-    if not success then
-        warn("[CONFIG] Failed to save config")
+    if success then
+        warn("[CONFIG] Settings saved successfully")
+    else
+        warn("[CONFIG] Failed to save:", err)
     end
 end
 
