@@ -28,7 +28,7 @@ function autoCloseVolcano()
 
     -- หากไม่มี Volcano ใด ๆ
     if not foundVolcano then
-        print("ไม่มี Volcano ในตำแหน่งที่ระบุ")
+        --print("ไม่มี Volcano ในตำแหน่งที่ระบุ")
     end
 end
 
