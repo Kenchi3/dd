@@ -1,18 +1,8 @@
 local ConfigSystem = {}
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-
--- Add debug flag
-ConfigSystem.DEBUG = true
-
-function ConfigSystem:Log(...)
-    if self.DEBUG then
-        warn("[CONFIG]", ...)
-    end
-end
 
 -- Default configuration
-ConfigSystem.defaults = {
+local defaultConfig = {
     selectedDungeon = "GoblinCave",
     selectedDifficulty = "Normal",
     autoJoinDungeon = false,
@@ -22,39 +12,32 @@ ConfigSystem.defaults = {
     farmHeight = 8
 }
 
-function ConfigSystem:GetFileName()
-    local filename = string.format("%s_dungeon.json", Players.LocalPlayer.UserId)
-    self:Log("Using config file:", filename)
-    return filename
-end
-
 function ConfigSystem:Load()
-    local filename = self:GetFileName()
+    warn("[CONFIG] Loading settings...")
     
-    -- Check if file exists
-    if not isfile(filename) then
-        self:Log("No config file found - Using defaults")
-        return self.defaults
-    end
-    
-    -- Try to load config
-    local success, data = pcall(function()
-        local content = readfile(filename)
-        self:Log("Reading file content:", content)
-        return HttpService:JSONDecode(content)
+    local success, result = pcall(function()
+        if isfile("dungeon_config.json") then
+            warn("[CONFIG] Found existing config file")
+            return HttpService:JSONDecode(readfile("dungeon_config.json"))
+        else
+            warn("[CONFIG] No config file found, using defaults")
+            return defaultConfig
+        end
     end)
-    
+
     if success then
-        self:Log("Successfully loaded config")
-        return data
+        warn("[CONFIG] Settings loaded successfully")
+        return result
     else
-        self:Log("Failed to load config:", data)
-        return self.defaults
+        warn("[CONFIG] Error loading config:", result)
+        return defaultConfig
     end
 end
 
-function ConfigSystem:Save()
-    local currentConfig = {
+function ConfigSystem:SaveConfig()
+    warn("[CONFIG] Saving settings...")
+    
+    local data = {
         selectedDungeon = _G.selectedDungeon,
         selectedDifficulty = _G.selectedDifficulty,
         autoJoinDungeon = _G.autoJoinDungeon,
@@ -64,16 +47,14 @@ function ConfigSystem:Save()
         farmHeight = _G.Height
     }
     
-    self:Log("Saving config:", HttpService:JSONEncode(currentConfig))
-    
     local success, err = pcall(function()
-        writefile(self:GetFileName(), HttpService:JSONEncode(currentConfig))
+        writefile("dungeon_config.json", HttpService:JSONEncode(data))
     end)
     
     if success then
-        self:Log("Config saved successfully")
+        warn("[CONFIG] Settings saved successfully")
     else
-        self:Log("Failed to save config:", err)
+        warn("[CONFIG] Error saving config:", err)
     end
 end
 
