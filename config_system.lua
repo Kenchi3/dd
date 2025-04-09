@@ -1,7 +1,8 @@
 local ConfigSystem = {}
 local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
--- Default configuration
+-- Default config
 local defaultConfig = {
     selectedDungeon = "GoblinCave",
     selectedDifficulty = "Normal",
@@ -12,30 +13,34 @@ local defaultConfig = {
     farmHeight = 8
 }
 
-function ConfigSystem:Load()
-    warn("[CONFIG] Loading settings...")
-    
-    local success, result = pcall(function()
-        if isfile("dungeon_config.json") then
-            warn("[CONFIG] Found existing config file")
-            return HttpService:JSONDecode(readfile("dungeon_config.json"))
-        else
-            warn("[CONFIG] No config file found, using defaults")
-            return defaultConfig
-        end
-    end)
+-- Config state
+local configLoaded = false
+local currentConfig = {}
 
-    if success then
-        warn("[CONFIG] Settings loaded successfully")
-        return result
-    else
-        warn("[CONFIG] Error loading config:", result)
-        return defaultConfig
+function ConfigSystem:Init()
+    local filename = Players.LocalPlayer.UserId .. "_config.json"
+    
+    if isfile(filename) then
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(readfile(filename))
+        end)
+        
+        if success then
+            currentConfig = data
+            configLoaded = true
+            warn("[CONFIG] Loaded from:", filename)
+            return data
+        end
     end
+    
+    currentConfig = defaultConfig
+    configLoaded = true
+    warn("[CONFIG] Using default settings")
+    return defaultConfig
 end
 
-function ConfigSystem:SaveConfig()
-    warn("[CONFIG] Saving settings...")
+function ConfigSystem:Save()
+    if not configLoaded then return end
     
     local data = {
         selectedDungeon = _G.selectedDungeon,
@@ -47,14 +52,15 @@ function ConfigSystem:SaveConfig()
         farmHeight = _G.Height
     }
     
-    local success, err = pcall(function()
-        writefile("dungeon_config.json", HttpService:JSONEncode(data))
+    local filename = Players.LocalPlayer.UserId .. "_config.json"
+    
+    local success = pcall(function()
+        writefile(filename, HttpService:JSONEncode(data))
+        warn("[CONFIG] Saved to:", filename)
     end)
     
-    if success then
-        warn("[CONFIG] Settings saved successfully")
-    else
-        warn("[CONFIG] Error saving config:", err)
+    if not success then
+        warn("[CONFIG] Failed to save config")
     end
 end
 
