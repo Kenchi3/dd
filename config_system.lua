@@ -1,9 +1,8 @@
 local ConfigSystem = {}
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
 
 -- Default settings
-ConfigSystem.defaults = {
+local defaults = {
     selectedDungeon = "GoblinCave",
     selectedDifficulty = "Normal",
     autoJoinDungeon = false,
@@ -13,31 +12,23 @@ ConfigSystem.defaults = {
     farmHeight = 8
 }
 
--- Get config file path
-function ConfigSystem:GetConfigPath()
-    return string.format("%s_settings.json", Players.LocalPlayer.UserId)
-end
-
--- Load saved config
 function ConfigSystem:Load()
-    local path = self:GetConfigPath()
-    
-    if isfile(path) then
-        local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile(path))
-        end)
-        
-        if success then
-            warn("[CONFIG] Loaded settings from", path)
-            return result
-        end
+    if not isfile("dungeon_settings.json") then
+        return defaults
     end
     
-    warn("[CONFIG] Using default settings")
-    return self.defaults
+    local success, data = pcall(function()
+        return HttpService:JSONDecode(readfile("dungeon_settings.json"))
+    end)
+    
+    if success then
+        print("[Config] Loaded saved settings")
+        return data
+    end
+    
+    return defaults
 end
 
--- Save current config
 function ConfigSystem:Save()
     local data = {
         selectedDungeon = _G.selectedDungeon,
@@ -49,15 +40,10 @@ function ConfigSystem:Save()
         farmHeight = _G.Height
     }
     
-    local success, err = pcall(function()
-        writefile(self:GetConfigPath(), HttpService:JSONEncode(data))
+    pcall(function()
+        writefile("dungeon_settings.json", HttpService:JSONEncode(data))
+        print("[Config] Settings saved")
     end)
-    
-    if success then
-        warn("[CONFIG] Settings saved successfully")
-    else
-        warn("[CONFIG] Failed to save:", err)
-    end
 end
 
 return ConfigSystem
