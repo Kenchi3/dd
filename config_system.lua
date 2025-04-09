@@ -2,6 +2,15 @@ local ConfigSystem = {}
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
+-- Add debug flag
+ConfigSystem.DEBUG = true
+
+function ConfigSystem:Log(...)
+    if self.DEBUG then
+        warn("[CONFIG]", ...)
+    end
+end
+
 -- Default configuration
 ConfigSystem.defaults = {
     selectedDungeon = "GoblinCave",
@@ -13,51 +22,58 @@ ConfigSystem.defaults = {
     farmHeight = 8
 }
 
--- Get config file name based on player ID
 function ConfigSystem:GetFileName()
-    return string.format("dungeon_config_%s.json", Players.LocalPlayer.UserId)
+    local filename = string.format("%s_dungeon.json", Players.LocalPlayer.UserId)
+    self:Log("Using config file:", filename)
+    return filename
 end
 
--- Load config
 function ConfigSystem:Load()
     local filename = self:GetFileName()
     
+    -- Check if file exists
     if not isfile(filename) then
+        self:Log("No config file found - Using defaults")
         return self.defaults
     end
     
-    local success, result = pcall(function()
-        return HttpService:JSONDecode(readfile(filename))
+    -- Try to load config
+    local success, data = pcall(function()
+        local content = readfile(filename)
+        self:Log("Reading file content:", content)
+        return HttpService:JSONDecode(content)
     end)
     
     if success then
-        warn("[CONFIG] Loaded existing settings")
-        return result
+        self:Log("Successfully loaded config")
+        return data
+    else
+        self:Log("Failed to load config:", data)
+        return self.defaults
     end
-    
-    return self.defaults
 end
 
--- Save config
 function ConfigSystem:Save()
-    local data = {
+    local currentConfig = {
         selectedDungeon = _G.selectedDungeon,
         selectedDifficulty = _G.selectedDifficulty,
         autoJoinDungeon = _G.autoJoinDungeon,
-        autoFarm = _G.autoFarming, 
+        autoFarm = _G.autoFarming,
         autoStartDungeon = _G.AutoStart,
         autoLeaveDungeon = _G.DungeonEnded,
         farmHeight = _G.Height
     }
     
+    self:Log("Saving config:", HttpService:JSONEncode(currentConfig))
+    
     local success, err = pcall(function()
-        writefile(self:GetFileName(), HttpService:JSONEncode(data))
+        writefile(self:GetFileName(), HttpService:JSONEncode(currentConfig))
     end)
     
     if success then
-        warn("[CONFIG] Settings saved")
+        self:Log("Config saved successfully")
     else
-        warn("[CONFIG] Failed to save:", err)
+        self:Log("Failed to save config:", err)
     end
 end
 
