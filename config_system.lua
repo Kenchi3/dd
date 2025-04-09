@@ -3,7 +3,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
 -- Default configuration
-local defaultConfig = {
+ConfigSystem.defaults = {
     selectedDungeon = "GoblinCave",
     selectedDifficulty = "Normal",
     autoJoinDungeon = false,
@@ -13,63 +13,51 @@ local defaultConfig = {
     farmHeight = 8
 }
 
--- Keep track of initial load
-local isFirstLoad = true
-
-function ConfigSystem:GetConfigFileName()
-    local player = Players.LocalPlayer
-    return string.format("%s-config.json", player.UserId)
+-- Get config file name based on player ID
+function ConfigSystem:GetFileName()
+    return string.format("dungeon_config_%s.json", Players.LocalPlayer.UserId)
 end
 
-function ConfigSystem:LoadConfig()
-    local fileName = self:GetConfigFileName()
+-- Load config
+function ConfigSystem:Load()
+    local filename = self:GetFileName()
     
-    if isfile(fileName) then
-        local success, result = pcall(function()
-            local json = readfile(fileName)
-            local data = HttpService:JSONDecode(json)
-            print("[Config] Loaded existing configuration")
-            isFirstLoad = false
-            return data
-        end)
-        
-        if success then
-            return result
-        else
-            warn("[Config] Failed to load configuration:", result)
-            return defaultConfig
-        end
-    else
-        print("[Config] No config file found, using default settings")
-        return defaultConfig
+    if not isfile(filename) then
+        return self.defaults
     end
+    
+    local success, result = pcall(function()
+        return HttpService:JSONDecode(readfile(filename))
+    end)
+    
+    if success then
+        warn("[CONFIG] Loaded existing settings")
+        return result
+    end
+    
+    return self.defaults
 end
 
-function ConfigSystem:SaveConfig()
-    -- Skip saving on first load
-    if isFirstLoad then
-        isFirstLoad = false
-        return
-    end
-
-    local currentConfig = {
+-- Save config
+function ConfigSystem:Save()
+    local data = {
         selectedDungeon = _G.selectedDungeon,
         selectedDifficulty = _G.selectedDifficulty,
         autoJoinDungeon = _G.autoJoinDungeon,
-        autoFarm = _G.autoFarming,
+        autoFarm = _G.autoFarming, 
         autoStartDungeon = _G.AutoStart,
         autoLeaveDungeon = _G.DungeonEnded,
         farmHeight = _G.Height
     }
-
+    
     local success, err = pcall(function()
-        local json = HttpService:JSONEncode(currentConfig)
-        writefile(self:GetConfigFileName(), json)
-        print("[Config] Configuration saved successfully")
+        writefile(self:GetFileName(), HttpService:JSONEncode(data))
     end)
     
-    if not success then
-        warn("[Config] Failed to save configuration:", err)
+    if success then
+        warn("[CONFIG] Settings saved")
+    else
+        warn("[CONFIG] Failed to save:", err)
     end
 end
 
