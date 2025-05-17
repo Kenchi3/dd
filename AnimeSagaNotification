@@ -19,6 +19,8 @@ local items = HttpService:JSONDecode(itemBag.Value)
 
 -- ตารางกำหนด emoji สำหรับแต่ละ Item
 local emojiMap = {
+    ["Demon Blood"] = "🩸",
+    Kimbap = "🍙"
     Spell = "📜",
     SuperSpell = "🌟",
     Bottle = "🍾",
