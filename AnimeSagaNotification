@@ -1,0 +1,79 @@
+-- ตรวจสอบ executor
+local request = (syn and syn.request) or http_request or request or (http and http.request)
+if not request then
+    return warn("❌ Executor นี้ไม่รองรับการส่ง Webhook")
+end
+
+-- ตั้งค่า Webhook URL
+local webhook_url = "https://discord.com/api/webhooks/1254548069144461382/yKMM0gt9d7cg1Ruc7WjENOMQDluII9kMIw_LlfJJc_C4fNJdaqgJ6T3tdAZ56bIYcwtS" -- <== แก้เป็นของคุณ
+
+-- ดึงข้อมูล
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local playerData = ReplicatedStorage:WaitForChild("PlayerData"):WaitForChild(player.Name)
+local itemBag = playerData:WaitForChild("Inventory"):WaitForChild("ItemBag")
+local items = HttpService:JSONDecode(itemBag.Value)
+
+-- ตารางกำหนด emoji สำหรับแต่ละ Item
+local emojiMap = {
+    Spell = "📜",
+    SuperSpell = "🌟",
+    Bottle = "🍾",
+    Ticket = "🎫",
+    Gear = "⚙️",
+    Milk = "🥛",
+    Screws = "🔩",
+    Yoyo = "🪀",
+    Egg = "🥚",
+    Handheld = "🎮",
+    Chip = "💾",
+    Battery = "🔋",
+    Dice = "🎲",
+    Key = "🔑",
+    TraitReroll = "🧬",
+    Narutomaki = "🍥",
+    Onigiri = "🍙",
+    ["Meat Bone"] = "🍖",
+    Udon = "🍜",
+    Magnet = "🧲",
+    Soup = "🍲"
+}
+
+
+-- สร้างข้อความ
+local msg = "📦 **Inventory Report for `" .. player.Name .. "`**\n"
+msg = msg .. "━━━━━━━━━━━━━━━━━━━━━━\n"
+
+for _, item in ipairs(items) do
+    local emoji = emojiMap[item.Items] or "🔹" -- ถ้าไม่เจอ emoji ใช้ 🔹 แทน
+    msg = msg .. emoji .. " **" .. item.Items .. "** — `x" .. item.Number .. "`\n"
+end
+
+msg = msg .. "━━━━━━━━━━━━━━━━━━━━━━\n✅ **ข้อมูลถูกส่งแล้วเรียบร้อย!**"
+
+-- เตรียม Payload
+local payload = HttpService:JSONEncode({
+    content = msg
+})
+
+-- ส่ง Webhook
+local success, err = pcall(function()
+    request({
+        Url = webhook_url,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = payload
+    })
+end)
+
+-- รายงานผล
+if success then
+    print("✅ ส่งข้อมูลสำเร็จ")
+else
+    warn("❌ ส่งไม่สำเร็จ: " .. tostring(err))
+end
