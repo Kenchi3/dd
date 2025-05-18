@@ -1,0 +1,73 @@
+local request = (syn and syn.request) or http_request or request or (http and http.request)
+if not request then return warn("❌ Executor นี้ไม่รองรับการส่ง Webhook") end
+
+local webhook_url = "https://discord.com/api/webhooks/1248392620162547754/4M53Za1YDAiIUBLXIQywo64JFUel-obq-HkRBM3KdDWqkF-Ou4cHfKkk6ydj_lOT_4sV"
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local itemsFolder = ReplicatedStorage:WaitForChild("Player_Data"):WaitForChild(player.Name):WaitForChild("Items")
+
+local emojiMap = {
+    ["Alpha Dust"] = "✨",
+    ["Ancient Power Core"] = "🔋",
+    ["Ancient Talisman"] = "🧿",
+    ["Arata Armor Piece"] = "🛡️",
+    ["Arcane Dust"] = "🔮",
+    ["Blood Ember"] = "🔥",
+    ["CGGG Investigator's Badge"] = "🎖️",
+    ["Chakra Shard"] = "💠",
+    ["Chaos Bone Shard"] = "🦴",
+    ["Chaotic Sword"] = "⚔️"
+}
+
+task.wait(2)
+
+local description = ""
+local foundItems = 0
+
+for _, itemFolder in ipairs(itemsFolder:GetChildren()) do
+    local amountValue = itemFolder:FindFirstChild("Amount")
+    if amountValue and amountValue:IsA("IntValue") then
+        local itemName = itemFolder.Name
+        local amount = amountValue.Value
+        local emoji = emojiMap[itemName] or "🔹"
+        local line = string.format("%s **%s** — `x%d`\n", emoji, itemName, amount)
+        
+        -- ตัดถ้าเกิน Discord Embed limit (ประมาณ 2048 ตัวอักษร)
+        if #description + #line < 2000 then
+            description = description .. line
+            foundItems += 1
+        end
+    end
+end
+
+if foundItems == 0 then
+    description = "⚠️ ไม่มีไอเทมในตัวผู้เล่น"
+end
+
+local payload = HttpService:JSONEncode({
+    embeds = {{
+        title = "📦 Inventory Report for " .. player.Name,
+        description = description,
+        color = 0x00ff99,
+        footer = { text = "✅ ส่งข้อมูลเรียบร้อยแล้ว!" }
+    }}
+})
+
+local success, err = pcall(function()
+    request({
+        Url = webhook_url,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json" },
+        Body = payload
+    })
+end)
+
+if success then
+    print("✅ ส่งข้อมูลสำเร็จ")
+else
+    warn("❌ ส่งไม่สำเร็จ:", err)
+end
